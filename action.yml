@@ -1,0 +1,30 @@
+---
+name: Checks synchronization with
+description: Check if repo synchronize with other remote repository
+
+inputs:
+    ssh_privatekey:
+      description: "Path to private ssh key"
+      required: false
+      default: ""
+    remote_repo:
+      description: "Link to remote repository"
+      required: true
+    remote_branch:
+      description: "Remote branch that should be synchronized"
+      required: false
+      default: main
+
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch all repositories
+      shell: bash
+      run: |
+        test "${{ inputs.ssh_privatekey }}" != "" && export GIT_SSH_COMMAND="ssh -i ${{ inputs.ssh_privatekey }}" || echo "no private key"
+        git remote add "template_synch_with" "${{ matrix.repo }}"
+        git fetch --all
+    - name: Check synchronization
+      shell: bash
+      run: |
+        bash ${GITHUB_ACTION_PATH}/merge_check.sh -b "template_synch_with/${{ inputs.remote_branch }}"
